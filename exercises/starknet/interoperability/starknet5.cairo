@@ -2,15 +2,11 @@
 // Address all the TODOs to make the tests pass!
 // Execute `starklings hint starknet5` or use the `hint` watch subcommand for a hint.
 
-// I AM NOT DONE
-
-use core::traits::Into;
-use core::result::ResultTrait;
-use starknet::syscalls::deploy_syscall;
-use array::ArrayTrait;
 use traits::TryInto;
+use array::ArrayTrait;
 use option::OptionTrait;
-use starknet::class_hash::Felt252TryIntoClassHash;
+use core::{traits::Into, result::ResultTrait};
+use starknet::{class_hash::Felt252TryIntoClassHash, syscalls::deploy_syscall};
 
 #[starknet::interface]
 trait IContractA<TContractState> {
@@ -18,14 +14,12 @@ trait IContractA<TContractState> {
     fn get_value(self: @TContractState) -> u128;
 }
 
-
 #[starknet::contract]
 mod ContractA {
+    use starknet::{ContractAddress, info::get_contract_address};
+    use super::{IContractBDispatcher, IContractBDispatcherTrait};
+
     use traits::Into;
-    use starknet::info::get_contract_address;
-    use starknet::ContractAddress;
-    use super::IContractBDispatcher;
-    use super::IContractBDispatcherTrait;
     use result::ResultTrait;
     use debug::PrintTrait;
 
@@ -42,9 +36,17 @@ mod ContractA {
 
     #[external(v0)]
     impl ContractAImpl of super::IContractA<ContractState> {
+        // TODO: check if contract_b is enabled. If it is, set the value and return true. Otherwise, return false.
         fn set_value(ref self: ContractState, value: u128) -> bool {
-            // TODO: check if contract_b is enabled.
-            // If it is, set the value and return true. Otherwise, return false.
+            let address = self.contract_b.read();
+            let dispatcher = IContractBDispatcher{contract_address: address};
+            let is_enabled = dispatcher.is_enabled();
+            if is_enabled == true {
+                self.value.write(value);
+                true
+            } else {
+                false
+            } 
         }
 
         fn get_value(self: @ContractState) -> u128 {
@@ -104,29 +106,23 @@ mod test {
     use super::IContractBDispatcher;
     use super::IContractBDispatcherTrait;
 
-
     #[test]
     #[available_gas(30000000)]
     fn test_interoperability() {
         // Deploy ContractB
-        let (address_b, _) = deploy_syscall(
-            ContractB::TEST_CLASS_HASH.try_into().unwrap(), 0, ArrayTrait::new().span(), false
-        )
-            .unwrap();
+        let (address_b, _) = deploy_syscall(ContractB::TEST_CLASS_HASH.try_into().unwrap(), 0, ArrayTrait::new().span(), false).unwrap();
 
         // Deploy ContractA
         let mut calldata = ArrayTrait::new();
         calldata.append(address_b.into());
-        let (address_a, _) = deploy_syscall(
-            ContractA::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-        )
-            .unwrap();
+        let (address_a, _) = deploy_syscall(ContractA::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false).unwrap();
 
         // contract_a is of type IContractADispatcher. Its methods are defined in IContractADispatcherTrait.
         let contract_a = IContractADispatcher { contract_address: address_a };
         let contract_b = IContractBDispatcher { contract_address: address_b };
 
         //TODO interact with contract_b to make the test pass.
+        contract_b.enable();
 
         // Tests
         assert(contract_a.set_value(300) == true, 'Could not set value');

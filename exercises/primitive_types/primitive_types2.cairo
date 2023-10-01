@@ -2,8 +2,6 @@
 // Fill in the rest of the line that has code missing!
 // No hints, there's no tricks, just get used to typing these :)
 
-// I AM NOT DONE
-
 use debug::PrintTrait;
 
 fn main() {
@@ -24,14 +22,14 @@ fn main() {
         ('Neither alphabetic nor numeric!').print();
     }
 
-    let // Finish this line like the example! What's your favorite short string?
+    let mut my_favorite_short_string = 'hello world!'; // Finish this line like the example! What's your favorite short string?
     // Try a letter, try a number, try a special character, try a short string!
     if is_alphabetic(
-        ref your_character
+        ref my_favorite_short_string
     ) {
         ('Alphabetical!').print();
     } else if is_numeric(
-        ref your_character
+        ref my_favorite_short_string
     ) {
         ('Numerical!').print();
     } else {
@@ -40,26 +38,11 @@ fn main() {
 }
 
 fn is_alphabetic(ref char: felt252) -> bool {
-    if char >= 'a' {
-        if char <= 'z' {
-            return true;
-        }
-    }
-    if char >= 'A' {
-        if char <= 'Z' {
-            return true;
-        }
-    }
-    false
+    if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z' ) { true } else { false }
 }
 
 fn is_numeric(ref char: felt252) -> bool {
-    if char >= '0' {
-        if char <= '9' {
-            return true;
-        }
-    }
-    false
+    if (char >= '0' && char <= '9') { true } else { false }
 }
 
 // Note: the following code is not part of the challenge, it's just here to make the code above work.
